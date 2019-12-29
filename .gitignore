@@ -1,0 +1,6 @@
+*swp
+*.backup
+.directory
+*.diff
+*.o
+MBF
