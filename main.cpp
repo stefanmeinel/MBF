@@ -115,7 +115,7 @@
 const double empty_double=std::numeric_limits<int>::max()-1;
 const int empty_int=std::numeric_limits<int>::max()-1;
 
-const double version=5.63;
+const double version=5.64;
 
 const int start_n_functions=1;
 const int start_n_variables=1;
@@ -137,6 +137,7 @@ const double start_tolerance=0.001;
 const int start_svd=0;
 const double start_svd_ratio=0.000001;
 const double start_svd_value=0.000000000001;
+const double start_rescale_value=0.99;
 const int start_steps=100;
 const int start_bin=1;
 const int start_n_exp=1;
@@ -350,6 +351,7 @@ double chisqr_tolerance;
 int svd_cut;
 double svd_ratio;
 double svd_value;
+double rescale_factor;
 inversion_method inv_method;
 int max_steps;
 int bin_size;
@@ -441,6 +443,7 @@ void init()
   svd_cut=start_svd;
   svd_ratio=start_svd_ratio;
   svd_value=start_svd_value;
+  rescale_factor=start_rescale_value;
   max_steps=start_steps;
   bin_size=start_bin;
   bse_file="";
@@ -713,6 +716,14 @@ bool loadFile(const string& fileName)
     if(value!=empty_double)
     {
       svd_value=value;
+    }
+  }
+  if(m.exists("rescalevalue"))
+  {
+    double value=m.get_double("rescalevalue");
+    if(value!=empty_double)
+    {
+      rescale_factor=value;
     }
   }
   if(m.exists("inversionmethod"))
@@ -1041,6 +1052,10 @@ bool fit(string mbf_file_name)
       cout << "SVD with EV value cut" << endl;
       cout << "SVD EV value cut: " << svd_value << endl;
       break;
+    case off_diagonal_rescale:
+      cout << "Rescale off-diagonal elements" << endl;
+      cout << "Rescale factor: " << rescale_factor << endl;
+      break;
     default:
       break;
   }
@@ -1295,6 +1310,7 @@ bool bootstrap(string mbf_file_name)
     _fitter->set_svd_cut(svd_cut);
     _fitter->set_svd_cut_ratio(svd_ratio);
     _fitter->set_svd_cut_absolute(svd_value);
+    _fitter->set_off_diagonal_rescale_factor(rescale_factor);
     string set_data_message;
     _fitter->set_data(fit_arguments, boot_data, set_data_message);
     if(boot_prior && bayesian)
@@ -1695,6 +1711,7 @@ bool set_fit_data()
   _fitter->set_svd_cut(svd_cut);
   _fitter->set_svd_cut_ratio(svd_ratio);
   _fitter->set_svd_cut_absolute(svd_value);
+  _fitter->set_off_diagonal_rescale_factor(rescale_factor);
   string set_data_message;
   _fitter->set_data(fit_arguments, fit_data, set_data_message);
   if( (inv_method!=LU_inversion) || (_fitter->get_cut()!=0) )
