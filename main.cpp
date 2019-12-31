@@ -115,7 +115,7 @@
 const double empty_double=std::numeric_limits<int>::max()-1;
 const int empty_int=std::numeric_limits<int>::max()-1;
 
-const double version=5.64;
+const double version=5.65;
 
 const int start_n_functions=1;
 const int start_n_variables=1;
@@ -128,7 +128,7 @@ const bool start_second_deriv_covariance=true;
 const double start_num_diff_step=1e-08;
 const bool start_use_bse=false;
 const bool start_restrict_data=false;
-const bool start_bootstrap_normalization=false;
+const cov_normalization start_cov_normalization=standard_normalization;
 const int start_start_data=1;
 const int start_stop_data=1000;
 const double start_startlambda=0.001;
@@ -340,7 +340,7 @@ double num_diff_step;
 bool use_bse;
 bool restrict_data;
 
-bool bootstrap_normalization;
+cov_normalization cn;
 
 int start_n_data;
 int stop_n_data;
@@ -434,7 +434,7 @@ void init()
   num_diff_step=start_num_diff_step;
   use_bse=start_use_bse;
   restrict_data=start_restrict_data;
-  bootstrap_normalization=start_bootstrap_normalization;
+  cn=start_cov_normalization;
   start_n_data=start_start_data;
   stop_n_data=start_stop_data;
   start_lambda=start_startlambda;
@@ -757,13 +757,21 @@ bool loadFile(const string& fileName)
       bin_size=binsize;
     }
   }
-  if(m.exists("bootstrapnormalization"))
+  if(m.exists("bootstrapnormalization")) // for backward compatibility
   {
-    bootstrap_normalization=m.get_bool("bootstrapnormalization");
-    if(bootstrap_normalization)
+    bool boot_n=m.get_bool("bootstrapnormalization");
+    if(boot_n)
     {
-      bin_size=1;
+      cn=bootstrap_normalization;
     }
+    else
+    {
+      cn=standard_normalization;
+    }
+  }
+  if(m.exists("covnormalization"))
+  {
+    cn=static_cast<cov_normalization>(m.get_int("covnormalization"));
   }
 
   if(m.exists("datafiletype"))
@@ -1021,13 +1029,17 @@ bool fit(string mbf_file_name)
   cout << "Delta(chi^2) tolerance       = " << chisqr_tolerance << endl;
 
   cout << "Normalization of correlation matrix: ";
-  if(bootstrap_normalization)
+  if (cn==standard_normalization)
+  {
+    cout << "1/(N*(N-1))" << endl;
+  }
+  else if(cn==bootstrap_normalization)
   {
     cout << "1/(N-1)" << endl;
   }
-  else
+  else if (cn==jackknife_normalization)
   {
-    cout << "1/(N*(N-1))" << endl;
+    cout << "(N-1)/N" << endl;
   }
 
 
@@ -1306,7 +1318,7 @@ bool bootstrap(string mbf_file_name)
       boot_data[b]=fit_data[r];
     }
     _fitter->set_inversion_method(inv_method);
-    _fitter->set_bootstrap_normalization(bootstrap_normalization);
+    _fitter->set_cov_normalization(cn);
     _fitter->set_svd_cut(svd_cut);
     _fitter->set_svd_cut_ratio(svd_ratio);
     _fitter->set_svd_cut_absolute(svd_value);
@@ -1349,9 +1361,13 @@ bool bootstrap(string mbf_file_name)
     all_output[p] -> close();
     delete all_output[p];
   }
-  if(bootstrap_normalization)
+  if(cn==bootstrap_normalization)
   {
     cout << "Warning: data correlation matrix normalization is set to 1/(N-1). Maybe you should use multifit instad of bootstrap." << endl << endl;
+  }
+  if(cn==jackknife_normalization)
+  {
+    cout << "Warning: data correlation matrix normalization is set to (N-1)/N. Maybe you should use multifit instad of bootstrap." << endl << endl;
   }
 
   return true;
@@ -1707,7 +1723,7 @@ bool set_fit_data()
     }
   }
   _fitter->set_inversion_method(inv_method);
-  _fitter->set_bootstrap_normalization(bootstrap_normalization);
+  _fitter->set_cov_normalization(cn);
   _fitter->set_svd_cut(svd_cut);
   _fitter->set_svd_cut_ratio(svd_ratio);
   _fitter->set_svd_cut_absolute(svd_value);
