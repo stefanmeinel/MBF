@@ -115,7 +115,7 @@
 const double empty_double=std::numeric_limits<int>::max()-1;
 const int empty_int=std::numeric_limits<int>::max()-1;
 
-const double version=5.65;
+const double version=5.66;
 
 const int start_n_functions=1;
 const int start_n_variables=1;
