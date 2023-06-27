@@ -142,7 +142,7 @@ class fitter
 
     vector< vector< double > > average;
 
-    gsl_matrix* inv_corr;
+    gsl_matrix* inv_datacov;
 
     gsl_matrix* result_cov;
 

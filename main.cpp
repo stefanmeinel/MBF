@@ -115,7 +115,7 @@
 const double empty_double=std::numeric_limits<int>::max()-1;
 const int empty_int=std::numeric_limits<int>::max()-1;
 
-const double version=5.66;
+const double version=5.67;
 
 const int start_n_functions=1;
 const int start_n_variables=1;
@@ -1028,7 +1028,7 @@ bool fit(string mbf_file_name)
   cout << "Lambda factor                = " << lambda_factor << endl;
   cout << "Delta(chi^2) tolerance       = " << chisqr_tolerance << endl;
 
-  cout << "Normalization of correlation matrix: ";
+  cout << "Normalization of covariance matrix: ";
   if (cn==standard_normalization)
   {
     cout << "1/(N*(N-1))" << endl;
@@ -1043,7 +1043,7 @@ bool fit(string mbf_file_name)
   }
 
 
-  cout << "(Pseudo-)Inversion method for correlation matrix: ";
+  cout << "(Pseudo-)Inversion method for covariance matrix: ";
   switch(inv_method)
   {
     case diagonal:
@@ -1363,11 +1363,11 @@ bool bootstrap(string mbf_file_name)
   }
   if(cn==bootstrap_normalization)
   {
-    cout << "Warning: data correlation matrix normalization is set to 1/(N-1). Maybe you should use multifit instad of bootstrap." << endl << endl;
+    cout << "Warning: data covariance matrix normalization is set to 1/(N-1). Maybe you should use multifit instad of bootstrap." << endl << endl;
   }
   if(cn==jackknife_normalization)
   {
-    cout << "Warning: data correlation matrix normalization is set to (N-1)/N. Maybe you should use multifit instad of bootstrap." << endl << endl;
+    cout << "Warning: data covariance matrix normalization is set to (N-1)/N. Maybe you should use multifit instad of bootstrap." << endl << endl;
   }
 
   return true;
@@ -1692,7 +1692,7 @@ bool set_fit_data()
   }
   if(fit_n_data_sets/bin_size<5)
   {
-    cerr << "Error: Bin size too large";
+    cerr << "Error: fewer than 5 samples (after binning)";
     return false;
   }
   if(fit_n_data_points==0)
@@ -1732,7 +1732,7 @@ bool set_fit_data()
   _fitter->set_data(fit_arguments, fit_data, set_data_message);
   if( (inv_method!=LU_inversion) || (_fitter->get_cut()!=0) )
   {
-    cout << "Pseudoinverse of data correlation matrix computed using SVD. Kept "
+    cout << "Pseudoinverse of data covariance matrix computed using SVD. Kept "
             << _fitter->get_dof()-_fitter->get_cut() << " out of "
             << _fitter->get_dof() << " singular values." << endl;
   }
